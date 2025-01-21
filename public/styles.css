@@ -1,0 +1,35 @@
+/* td{
+  text-align: center;
+  vertical-align: middle !important;
+} */
+
+/* th{
+  white-space: nowrap !important;
+  text-align: center;
+  vertical-align: middle;
+  background-color: cornflowerblue;
+  position: sticky !important;
+  z-index: 1 !important;
+} */
+
+th,
+td {
+  text-align: center;
+  vertical-align: middle !important;
+  max-width: 550px;
+  white-space: nowrap;
+  overflow-x: auto;
+}
+
+table {
+  margin: 0;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead th {
+  position: sticky;
+  top: 0;
+  background-color: cornflowerblue;
+  z-index: 1;
+}
