@@ -1,5 +1,6 @@
 require('dotenv').config();
 const axios = require('axios');
+const { readExcel } = require('./readExcel');
 
 const GITHUB_API_URL = 'https://api.github.com';
 const GITHUB_TOKEN = process.env.GITHUB_TOKENHYG;
@@ -25,7 +26,7 @@ const apiFile = axios.create({
   }
 });
 
-async function getRepos(page) {
+async function getReposGit(page) {
   try {
     const response = await api.get(`user/repos?type=member&per_page=100&page=${page}`);
     console.log('Rate Limit:', response.headers['x-ratelimit-limit']);
@@ -69,40 +70,41 @@ async function getRepos(page) {
 async function fetchAllRepos() {
   let page = 1;
   let allRepos = [];
-  let repos = [];
-
+  let reposGit = [];
+  let reposExcel = readExcel();
+  return reposExcel;
   while (true) {
-    repos = await getRepos(page);
-    if (repos.length === 0)
+    reposGit = await getReposGit(page);
+    if (!reposGit || reposGit.length === 0)
       break;
 
-    allRepos = allRepos.concat(repos);
+    allRepos = allRepos.concat(reposGit);
     page++;
   }
   //allRepos = allRepos.slice(0, 10);
-  allRepos = allRepos.filter(repo => repo.name === 'URBAMED2');
-  allRepos = await Promise.all(
-    allRepos.map(async (repo) => {
-      return {
-        name: repo.name,
-        description: repo.description || 'No hay descripción',
-        html_url: repo.html_url,
-        created_at: repo.created_at.split('T')[0],
-        license: repo.license || 'No se evidencia',
-        readme: await sendPetition(repo.url + '/readme', 'file') ? 'Está presente' : 'No está presente',
-        contributing: await sendPetition(repo.url + '/contents/CONTRIBUTING.md', 'file') ? 'Está presente' : 'No está presente',
-        default_branch: repo.default_branch,
-        branches: await sendPetition(repo.branches_url.split('{')[0], 'branches'),
-        last_commit: await sendPetition(repo.commits_url.split('{')[0], 'commits'),
-        releases: await sendPetition(repo.releases_url.split('{')[0], 'releases'),
-        access: repo.private ? 'El repositorio es privado.<br>Solo es accesible para colaboradores específicos.' : 'El repositorio es público.<br>Cualquier persona puede verlo.',
-        collaborators: await sendPetition(repo.collaborators_url.split('{')[0], 'collaborators'),
-        pull_requests: repo.open_issues > 0 ? await sendPetition(repo.issues_url.split('{')[0], 'PR') : 'No hay pull requests abiertos',
-        last_event: await sendPetition(repo.events_url, 'events') || ` Sin actividad reciente.<br>Última actividad en ${repo.updated_at.split('T')[0]}`,
-        forks: repo.forks_count > 0 ? repo.forks_count : 'Ninguno'
-      };
-    })
-  );
+  //allRepos = allRepos.filter(repo => repo.name === 'URBAMED2');
+  // allRepos = await Promise.all(
+  //   allRepos.map(async (repo) => {
+  //     return {
+  //       name: repo.name,
+  //       description: repo.description || 'No hay descripción',
+  //       html_url: repo.html_url,
+  //       created_at: repo.created_at.split('T')[0],
+  //       license: repo.license || 'No se evidencia',
+  //       readme: await sendPetition(repo.url + '/readme', 'file') ? 'Está presente' : 'No está presente',
+  //       contributing: await sendPetition(repo.url + '/contents/CONTRIBUTING.md', 'file') ? 'Está presente' : 'No está presente',
+  //       default_branch: repo.default_branch,
+  //       branches: await sendPetition(repo.branches_url.split('{')[0], 'branches'),
+  //       last_commit: await sendPetition(repo.commits_url.split('{')[0], 'commits'),
+  //       releases: await sendPetition(repo.releases_url.split('{')[0], 'releases'),
+  //       access: repo.private ? 'El repositorio es privado.<br>Solo es accesible para colaboradores específicos.' : 'El repositorio es público.<br>Cualquier persona puede verlo.',
+  //       collaborators: await sendPetition(repo.collaborators_url.split('{')[0], 'collaborators'),
+  //       pull_requests: repo.open_issues > 0 ? await sendPetition(repo.issues_url.split('{')[0], 'PR') : 'No hay pull requests abiertos',
+  //       last_event: await sendPetition(repo.events_url, 'events') || ` Sin actividad reciente.<br>Última actividad en ${repo.updated_at.split('T')[0]}`,
+  //       forks: repo.forks_count > 0 ? repo.forks_count : 'Ninguno'
+  //     };
+  //   })
+  // );
   // console.log(allRepos.length);
   return allRepos;
 }
