@@ -4,7 +4,6 @@ const path = require('path');
 const filePath = path.join(__dirname, 'public', 'resources' ,'Inventario del GitHub.xlsx');
 
 function readExcel() {
-  console.log(filePath);
   if (!fs.existsSync(filePath)) {
     console.error('File not found');
   }
@@ -19,22 +18,22 @@ function readExcel() {
       name: fila['NOMBRE DEL REPOSITORIO'],
       description: fila['DESCRIPCIÓN'],
       html_url: fila['URL'],
-      created_at: excelDateToJSDate(fila['FECHA DE CREACIÓN']).toDateString(),
+      created_at: formatText(fila['FECHA DE CREACIÓN'], 'date'),
       license: fila['LICENCIA DE DEPENDENCIA'],
-      structure_file: 'Estructura...',//fila['ESTRUCTURA DE CARPETAS'],
-      key_files: fila['ARCHIVOS CLAVE'],
+      structure_file: formatText(fila['ESTRUCTURA DE CARPETAS'], 'enter'),
+      key_files: formatText(fila['ARCHIVOS CLAVE'], 'enter'),
       readme: fila['ARCHIVO README.md'],
       contributing: fila['ARCHIVOS DE CONTRIBUCIÓN'],
       default_branch: fila['BRANCH PRINCIPAL'],
-      branches: fila['ESTRATEGIA DE RAMAS'],
+      branches: formatText(fila['ESTRATEGIA DE RAMAS'], 'both'),
       last_commit: fila['ULTIMO COMMIT'],
       releases: fila['ULTIMO RELEASE'],
-      dependencies: fila['DEPENDENCIAS'],
+      dependencies: formatText(fila['DEPENDENCIAS'], 'enter'),
       dependencies_problems: fila['DEPENDENCIAS CON VULNERABILIDADES'],
       security: fila['REVISIÓN DE SEGURIDAD'],
-      access: fila['PERMISOS'],
-      collaborators: fila['ACCESOS'],
-      sensitive_files: fila['ARCHIVOS SENSIBLES'],
+      access: formatText(fila['PERMISOS'], 'dot'),
+      collaborators: formatText(fila['ACCESOS'], 'both'),
+      sensitive_files: formatText(fila['ARCHIVOS SENSIBLES'], 'enter'),
       issues: fila['ISSUES ABIERTOS'],
       pull_requests: fila['PULL REQUEST ABIERTOS'],
       contributing_document: fila['DOCUMENTACIÓN DE CONTRIBUCIÓN'],
@@ -47,21 +46,36 @@ function readExcel() {
       contributing_guide: fila['GUIAS DE CONTRIBUCIÓN'],
       forks: fila['FORKs'],
       current_contributing: fila['CONTRIBUCIONES ACTIVAS'],
-      last_event: fila['ULTIMA ACTIVIDAD'],
+      last_event: formatText(fila['ULTIMA ACTIVIDAD'], 'enter'),
       update_frequency: fila['FRECUENCIA DE ACTUALIZACIONES'],
       archived_plan: fila['PLAN DE DESACTIVACIÓN O ARCHIVADO'],
       future_steps: fila['PRÓXIMOS PASOS O FEATURE'],
-      comments: fila['COMENTARIOS GENERALES']
+      comments: formatText(fila['COMENTARIOS GENERALES'], 'dot')
     }
   });
-  console.log(json[0]);
-
+  //console.log(json.slice(0, 1));
+  return json.slice(0, 1);
 }
 
 function excelDateToJSDate(serial) {
   // Fecha base de Excel (1900)
   const excelEpoch = new Date(1899, 11, 30);
   return new Date(excelEpoch.getTime() + serial * 86400000); // 86400000 ms en un día
+}
+
+function formatText(text, type) {
+  switch (type) {
+    case 'enter':
+      return text.replace(/\n/g, '<br>');
+    case 'dash':
+      return text.replace(/- /g, '');
+    case 'both':
+      return text.replace(/\n/g, '<br>').replace(/- /g, '');
+    case 'dot':
+      return text.replace(/\. /g, '<br>');
+    case 'date':
+      return excelDateToJSDate(text).toISOString().split('T')[0];
+  }
 }
 
 module.exports = { readExcel };
