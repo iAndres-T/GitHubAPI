@@ -110,7 +110,7 @@ async function fetchAllRepos() {
 }
 
 async function sendPetition(url, type) {
-  
+
   try {
     let response;
 
@@ -141,9 +141,9 @@ async function sendPetition(url, type) {
       case 'events':
         response = await api.get(url);
         response = response.data.filter(event => event.type == 'PushEvent');
-        if(response.length == 0)
+        if (response.length == 0)
           return null;
-        response =  response.map(event => ({ branch: event.payload.ref.split('/')[2], date: event.created_at.split('T')[0], author: event.actor.login }))[0];
+        response = response.map(event => ({ branch: event.payload.ref.split('/')[2], date: event.created_at.split('T')[0], author: event.actor.login }))[0];
         return `Rama: ${response.branch}<br>${response.date}<br>${response.author}`;
     }
 
@@ -158,4 +158,4 @@ async function sendPetition(url, type) {
 
 module.exports = { fetchAllRepos };
 
-fetchAllRepos(); // Solo para probar la función en consola
+//fetchAllRepos(); // Habilitar si se quiere probar la función en consola
