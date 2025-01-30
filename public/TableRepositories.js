@@ -1,154 +1,10 @@
+import { CustomToolTip } from './components/CustomToolTip.js';
+
 let tableData;
 
 $(document).ready(function () {
   getAdGrid();
-  //getExcelTable();
-  //getTable();
 });
-
-function getTable() {
-
-  if (tableData) {
-    tableData.destroy();
-  }
-
-  tableData = $('#reposTable').DataTable({
-    resonsive: true,
-    ajax: {
-      url: '/repos',
-      type: 'GET',
-      dataType: 'json',
-      dataSrc: ''
-    },
-    columns: [
-      { data: 'name' },
-      { data: 'description' },
-      { 
-        data: 'html_url',
-        render: function(data) {
-          return '<a href="' + data + '" target="_blank">' + data + '</a>';
-        }
-      },
-      { data: 'created_at' },
-      { data: 'license' },
-      { defaultContent: 'Verificar Manualmente' },
-      { defaultContent: 'Verificar Manualmente' },
-      { data: 'readme' },
-      { data: 'contributing' },
-      { data: 'default_branch' },
-      { data: 'branches' },
-      { data: 'last_commit' },
-      { data: 'releases' },
-      { defaultContent: 'Verificar Manualmente' },
-      { defaultContent: 'Verificar Manualmente' },
-      { defaultContent: 'Verificar Manualmente' },
-      { data: 'access' },
-      { data: 'collaborators' },
-      { defaultContent: 'Verificar Manualmente' },
-      { defaultContent: 'Verificar Manualmente' },
-      { data: 'pull_requests' },
-      { defaultContent: 'Verificar Manualmente' },
-      { defaultContent: 'Verificar Manualmente' },
-      { defaultContent: 'Verificar Manualmente' },
-      { defaultContent: 'Verificar Manualmente' },
-      { defaultContent: 'Verificar Manualmente' },
-      { data: 'readme' },
-      { defaultContent: 'Verificar Manualmente' },
-      { defaultContent: 'Validar en el README' },
-      { defaultContent: 'Verificar Manualmente' },
-      { data: 'forks' },
-      { defaultContent: 'Verificar Manualmente' },
-      { data: 'last_event' },
-      { defaultContent: 'Verificar Manualmente' },
-      { defaultContent: 'Verificar Manualmente' },
-      { defaultContent: 'Verificar Manualmente' },
-      { defaultContent: 'Verificar Manualmente' },
-    ],
-    order: [[0, 'asc']],
-    dom: 'Bfrtip',
-    buttons: ['pageLength'],
-    language: {
-      url: 'https://cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json',
-    },
-    error: function (xhr, error, thrown) {
-      console.log('Error fetching repositories:', error);
-    }
-  });
-}
-
-function getExcelTable() {
-  if (tableData) {
-    tableData.destroy();
-  }
-
-  tableData = $('#reposTable').DataTable({
-    resonsive: true,
-    ajax: {
-      url: '/repos',
-      type: 'GET',
-      dataType: 'json',
-      dataSrc: ''
-    },
-    columns: [
-      { data: 'name' },
-      { data: 'description' },
-      {
-        data: 'html_url',
-        render: function (data) {
-          return '<a href="' + data + '" target="_blank">' + data + '</a>';
-        }
-      },
-      { data: 'created_at' },
-      { data: 'license' },
-      {
-        data: 'structure_file',
-        createdCell: function (td) {
-          $(td).css('text-align', 'left');
-        }
-      },
-      { data: 'key_files' },
-      { data: 'readme' },
-      { data: 'contributing' },
-      { data: 'default_branch' },
-      { data: 'branches' },
-      { data: 'last_commit' },
-      { data: 'releases' },
-      { data: 'dependencies' },
-      { data: 'dependencies_problems' },
-      { data: 'security' },
-      { data: 'access' },
-      { data: 'collaborators' },
-      { data: 'sensitive_files' },
-      { data: 'issues' },
-      { data: 'pull_requests' },
-      { data: 'contributing_document' },
-      { data: 'ci' },
-      { data: 'qa' },
-      { data: 'sonar' },
-      { data: 'cd' },
-      { data: 'readme' },
-      { data: 'wiki' },
-      { data: 'example' },
-      { data: 'contributing_guide' },
-      { data: 'forks' },
-      { data: 'current_contributing' },
-      { data: 'last_event' },
-      { data: 'update_frequency' },
-      { data: 'archived_plan' },
-      { data: 'future_steps' },
-      { data: 'comments' },
-    ],
-    order: [[0, 'asc']],
-    dom: 'Bfrtip',
-    buttons: ['pageLength'],
-    lenguage: {
-      url: 'https://cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json',
-    },
-    error: function (xhr, error, thrown) {
-      console.log('Error fetching repositories:', error);
-    }
-  });
-}
 
 async function getAdGrid() {
   let repos = await fetch('/repos')
@@ -159,32 +15,129 @@ async function getAdGrid() {
     .catch(error => {
       console.error('Error fetching repositories:', error);
     });
-    
+
   const gridOptions = {
-    theme: agGrid.themeQuartz.withParams({ accentColor: 'gray', headerBackgroundColor: 'cornflowerblue' }),
+    theme: agGrid.themeQuartz.withParams({
+      accentColor: 'gray',
+      headerBackgroundColor: 'cornflowerblue',
+      columnBorder: { width: 1 }
+    }),
     autoSizeStrategy: { type: 'fitCellContents' },
-    defaultColDef: { suppressMovable: true},
+    suppressColumnVirtualisation: true,
+    defaultColDef: {
+      suppressMovable: true,
+      wrapText: true,
+      maxWidth: 500,
+      cellStyle: { 'line-height': '1.5' },
+      tooltipComponent: CustomToolTip
+    },
+    enableBrowserTooltips: true,
+    rowHeight: 100,
     rowData: repos,
     columnDefs: [
-      { headerName: 'Nombre', field: 'name', sortable: true, filter: true},
-      { headerName: 'Descripción', field: 'description' },
-      { headerName: 'URL', field: 'html_url' },
-      { headerName: 'Fecha de Creación', field: 'created_at' },
-      { headerName: 'Licencia', field: 'license' },
-      { headerName: 'Estructura de Carpetas', field: 'structure_file', wrapText: true},
-      { headerName: 'Archivos Clave', field: 'key_files' },
-      { headerName: 'README', field: 'readme' },
+      {
+        headerName: 'Actualizar',
+        field: 'update',
+        pinned: 'left',
+        cellStyle: { 'text-align': 'center' },
+        cellRenderer: params => {
+          return `<button type="button" class="btn btn-outline-info"><i class="fa fa-refresh"></i></button>`;
+        }
+      },
+      {
+        headerName: 'Nombre',
+        field: 'name',
+        pinned: 'left',
+        filter: true,
+        cellStyle: { 'text-align': 'center' },
+      },
+      {
+        headerName: 'Descripción',
+        field: 'description',
+        autoHeight: true,
+      },
+      {
+        headerName: 'URL',
+        field: 'html_url',
+        cellRenderer: params => {
+          return `<a href="${params.value}" target="_blank">${new URL(params.value)}</a>`
+        }
+      },
+      {
+        headerName: 'Fecha de Creación',
+        field: 'created_at',
+        cellStyle: { 'text-align': 'center' }
+      },
+      { headerName: 'Licencia de dependencia', field: 'license' },
+      {
+        headerName: 'Estructura de Carpetas',
+        field: 'structure_file',
+        tooltipField: 'structure_file',
+        //tooltipComponentParams: { type: 'structure_file' },
+        cellRenderer: params => {
+          return `${formatText(params.value)}`;
+        }
+      },
+      {
+        headerName: 'Archivos Clave',
+        field: 'key_files',
+        tooltipField: 'key_files',
+        //tooltipComponentParams: { type: 'key_files' },
+        cellRenderer: params => {
+          return `${formatText(params.value)}`;
+        }
+      },
+      { headerName: 'Archivo README.md', field: 'readme' },
       { headerName: 'Archivos de Contribución', field: 'contributing' },
-      { headerName: 'Branch Principal', field: 'default_branch' },
-      { headerName: 'Estrategia de Ramas', field: 'branches' },
+      {
+        headerName: 'Branch Principal',
+        field: 'default_branch',
+        cellStyle: { 'text-align': 'center' }
+      },
+      {
+        headerName: 'Estrategia de Ramas',
+        field: 'branches',
+        tooltipField: 'branches',
+        cellRenderer: params => {
+          return `${formatText(params.value)}`;
+        }
+      },
       { headerName: 'Último Commit', field: 'last_commit' },
       { headerName: 'Último Release', field: 'releases' },
-      { headerName: 'Dependencias', field: 'dependencies' },
-      { headerName: 'Dependencias con Vulnerabilidades', field: 'dependencies_problems' },
+      {
+        headerName: 'Dependencias',
+        field: 'dependencies',
+        tooltipField: 'dependencies',
+        cellRenderer: params => {
+          return `${formatText(params.value)}`;
+        }
+      },
+      {
+        headerName: 'Dependencias con Vulnerabilidades',
+        field: 'dependencies_problems',
+        tooltipField: 'dependencies_problems',
+        cellRenderer: params => {
+          return `${formatText(params.value)}`;
+        }
+      },
       { headerName: 'Revisión de Seguridad', field: 'security' },
       { headerName: 'Permisos', field: 'access' },
-      { headerName: 'Accesos', field: 'collaborators' },
-      { headerName: 'Archivos Sensibles', field: 'sensitive_files' },
+      {
+        headerName: 'Accesos',
+        field: 'collaborators',
+        tooltipField: 'collaborators',
+        cellRenderer: params => {
+          return `${formatText(params.value)}`;
+        }
+      },
+      {
+        headerName: 'Archivos Sensibles',
+        field: 'sensitive_files',
+        tooltipField: 'sensitive_files',
+        cellRenderer: params => {
+          return `${formatText(params.value)}`;
+        }
+      },
       { headerName: 'Issues Abiertos', field: 'issues' },
       { headerName: 'Pull Request Abiertos', field: 'pull_requests' },
       { headerName: 'Documentación de Contribución', field: 'contributing_document' },
@@ -192,6 +145,7 @@ async function getAdGrid() {
       { headerName: 'Pruebas QA', field: 'qa' },
       { headerName: 'SonarQube o Herramientas de Calidad', field: 'sonar' },
       { headerName: 'Despliegue Automático', field: 'cd' },
+      { headerName: 'Archivo README.md', field: 'readme2', autoHeight: true },
       { headerName: 'Wiki o Página de GitHub', field: 'wiki' },
       { headerName: 'Ejemplo de Uso', field: 'example' },
       { headerName: 'Guías de Contribución', field: 'contributing_guide' },
@@ -201,14 +155,25 @@ async function getAdGrid() {
       { headerName: 'Frecuencia de Actualizaciones', field: 'update_frequency' },
       { headerName: 'Plan de Desactivación o Archivado', field: 'archived_plan' },
       { headerName: 'Próximos Pasos o Feature', field: 'future_steps' },
-      { headerName: 'Comentarios Generales', field: 'comments' }
+      { headerName: 'Comentarios Generales', field: 'comments', autoHeight: true },
     ],
     pagination: true,
     paginationPageSize: 10,
     paginationPageSizeSelector: [10, 20, 50, 100],
   };
-  
+
   const myGrid = document.getElementById('myGrid');
   const gridApi = agGrid.createGrid(myGrid, gridOptions);
-  //agGrid.createGrid(myGrid, gridOptions);
+}
+
+function formatText(text) {
+  try {
+    if (text == 'Repositorio vacío') {
+      return text;
+    }
+    return text.replace(/\n/g, '<br>');
+  } catch (error) {
+    console.error(`Error en el formato de texto de ${text}`);
+    return 'El contenido de la celda no se pudó formatear, puede que la celda está vacía en el archivo de Excel.';
+  }
 }
