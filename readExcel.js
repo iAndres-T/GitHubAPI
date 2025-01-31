@@ -12,13 +12,13 @@ function readExcel() {
   const sheetName = workbook.SheetNames[0];
   const sheet = workbook.Sheets[sheetName];
   const data = xlsx.utils.sheet_to_json(sheet, { range: 5 });
-  let json = data;//.slice(0, 50);
+  let json = data;//.slice(0, 1);
   json = json.map(fila => {
     return {
       name: fila['NOMBRE DEL REPOSITORIO'],
       description: fila['DESCRIPCIÓN'],
       html_url: fila['URL'],
-      created_at: formatDate(fila['FECHA DE CREACIÓN']),
+      created_at: formatDate(fila['FECHA DE CREACIÓN'], fila['DESCRIPCIÓN']),
       license: fila['LICENCIA DE DEPENDENCIA'],
       structure_file: fila['ESTRUCTURA DE CARPETAS'],
       key_files: fila['ARCHIVOS CLAVE'],
@@ -54,7 +54,6 @@ function readExcel() {
       comments: fila['COMENTARIOS GENERALES']
     }
   });
-  //console.log(json.slice(0, 1));
   return json;
 }
 
@@ -64,10 +63,10 @@ function excelDateToJSDate(serial) {
   return new Date(excelEpoch.getTime() + serial * 86400000); // 86400000 ms en un día
 }
 
-function formatDate(date) {
+function formatDate(date, description) {
   try {
-    if (date == 'Repositorio vacío') {
-      return date;
+    if (description === 'Repositorio vacío') {
+      return description;
     }
     return excelDateToJSDate(date).toISOString().split('T')[0];
   } catch (error) {
