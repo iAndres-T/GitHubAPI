@@ -66,25 +66,28 @@ async function getAdGrid() {
       {
         headerName: 'Fecha de Creación',
         field: 'created_at',
+        cellDataType: 'text',
         cellStyle: { 'text-align': 'center' }
       },
-      { headerName: 'Licencia de dependencia', field: 'license' },
+      {
+        headerName: 'Licencia de dependencia',
+        field: 'license',
+        tooltipField: 'license'
+      },
       {
         headerName: 'Estructura de Carpetas',
         field: 'structure_file',
         tooltipField: 'structure_file',
-        //tooltipComponentParams: { type: 'structure_file' },
         cellRenderer: params => {
-          return `${formatText(params.value)}`;
+          return `${formatText(params)}`;
         }
       },
       {
         headerName: 'Archivos Clave',
         field: 'key_files',
         tooltipField: 'key_files',
-        //tooltipComponentParams: { type: 'key_files' },
         cellRenderer: params => {
-          return `${formatText(params.value)}`;
+          return `${formatText(params)}`;
         }
       },
       { headerName: 'Archivo README.md', field: 'readme' },
@@ -99,7 +102,7 @@ async function getAdGrid() {
         field: 'branches',
         tooltipField: 'branches',
         cellRenderer: params => {
-          return `${formatText(params.value)}`;
+          return `${formatText(params)}`;
         }
       },
       { headerName: 'Último Commit', field: 'last_commit' },
@@ -109,7 +112,7 @@ async function getAdGrid() {
         field: 'dependencies',
         tooltipField: 'dependencies',
         cellRenderer: params => {
-          return `${formatText(params.value)}`;
+          return `${formatText(params)}`;
         }
       },
       {
@@ -117,7 +120,7 @@ async function getAdGrid() {
         field: 'dependencies_problems',
         tooltipField: 'dependencies_problems',
         cellRenderer: params => {
-          return `${formatText(params.value)}`;
+          return `${formatText(params)}`;
         }
       },
       { headerName: 'Revisión de Seguridad', field: 'security' },
@@ -127,7 +130,7 @@ async function getAdGrid() {
         field: 'collaborators',
         tooltipField: 'collaborators',
         cellRenderer: params => {
-          return `${formatText(params.value)}`;
+          return `${formatText(params)}`;
         }
       },
       {
@@ -135,7 +138,7 @@ async function getAdGrid() {
         field: 'sensitive_files',
         tooltipField: 'sensitive_files',
         cellRenderer: params => {
-          return `${formatText(params.value)}`;
+          return `${formatText(params)}`;
         }
       },
       { headerName: 'Issues Abiertos', field: 'issues' },
@@ -166,14 +169,11 @@ async function getAdGrid() {
   const gridApi = agGrid.createGrid(myGrid, gridOptions);
 }
 
-function formatText(text) {
+function formatText(params) {
   try {
-    if (text == 'Repositorio vacío') {
-      return text;
-    }
-    return text.replace(/\n/g, '<br>');
+    return params.value.replace(/\n/g, '<br>');
   } catch (error) {
-    console.error(`Error en el formato de texto de ${text}`);
+    console.error(`Error en el formato de texto de ${params.value}`);
     return 'El contenido de la celda no se pudó formatear, puede que la celda está vacía en el archivo de Excel.';
   }
 }
