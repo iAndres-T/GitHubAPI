@@ -34,6 +34,11 @@ async function getAdGrid() {
     enableBrowserTooltips: true,
     rowHeight: 100,
     rowData: repos,
+    rowClassRules: {
+      "repo-archived": (params) => {
+        return params.data.name.includes('legacy_');
+      }
+    },
     columnDefs: [
       {
         headerName: 'Actualizar',
