@@ -6,12 +6,19 @@
   <title>Lista de Repositorios</title>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-  <!-- <link rel="stylesheet" href="styles.css"> -->
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-
-  <div id="myGrid" style="height: 98vh;"></div>
-
+  
+  <div id="header-div" style="height: 10vh;">
+    <h4>Inventario GitHub</h4>
+    <div id="color-info">
+      <span class="color-box" style="background-color: yellow;"></span><strong>Posiblemente desactualizado</strong> -
+      <span class="color-box" style="background-color: orange;"></span><strong>Archivado</strong> -
+      <span class="color-box" style="background-color: red; color: white;"></span><strong>Eliminado</strong>
+    </div>
+  </div>
+  <div id="myGrid" style="height: 90vh;"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
