@@ -34,11 +34,6 @@ async function getAdGrid() {
     enableBrowserTooltips: true,
     rowHeight: 100,
     rowData: repos,
-    rowClassRules: {
-      "repo-archived": (params) => {
-        return params.data.name.includes('legacy_');
-      }
-    },
     columnDefs: [
       {
         headerName: 'Actualizar',
@@ -46,7 +41,7 @@ async function getAdGrid() {
         pinned: 'left',
         cellStyle: { 'text-align': 'center' },
         cellRenderer: params => {
-          return `<button type="button" class="btn btn-outline-info"><i class="fa fa-refresh"></i></button>`;
+          return `<button type="button" class="btn btn-outline-info" ${params.data.is_archived ? 'disabled' : ''}><i class="fa fa-refresh"></i></button>`;
         }
       },
       {
@@ -55,6 +50,11 @@ async function getAdGrid() {
         pinned: 'left',
         filter: true,
         cellStyle: { 'text-align': 'center' },
+        cellClassRules: {
+          "repo-archived": (params) => {
+            return params.data.is_archived;
+          }
+        }
       },
       {
         headerName: 'Descripción',
