@@ -51,7 +51,9 @@ function readExcel() {
       update_frequency: fila['FRECUENCIA DE ACTUALIZACIONES'],
       archived_plan: fila['PLAN DE DESACTIVACIÓN O ARCHIVADO'],
       future_steps: fila['PRÓXIMOS PASOS O FEATURE'],
-      comments: fila['COMENTARIOS GENERALES']
+      comments: fila['COMENTARIOS GENERALES'],
+      is_archived: fila['NOMBRE DEL REPOSITORIO'].includes('legacy_') ? true : false,
+      is_updated: true
     }
   });
   return json;
