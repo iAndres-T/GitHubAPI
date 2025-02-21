@@ -33,7 +33,7 @@ async function getReposGit(page) {
     console.log('Rate Limit Remaining:', response.headers['x-ratelimit-remaining']);
     console.log('Rate Limit Reset:', new Date(response.headers['x-ratelimit-reset'] * 1000).toLocaleString());
 
-    return response.data.filter(repo => !repo.archived);
+    return response.data;
 
     /*Propiedades de la respuesta
       name: string,
@@ -72,7 +72,7 @@ async function fetchAllRepos() {
   let allRepos = [];
   let reposGit = [];
   let reposExcel = readExcel();
-  return reposExcel;
+  //return reposExcel;
   while (true) {
     reposGit = await getReposGit(page);
     if (!reposGit || reposGit.length === 0)
@@ -81,32 +81,70 @@ async function fetchAllRepos() {
     allRepos = allRepos.concat(reposGit);
     page++;
   }
-  //allRepos = allRepos.slice(0, 10);
-  //allRepos = allRepos.filter(repo => repo.name === 'URBAMED2');
-  // allRepos = await Promise.all(
-  //   allRepos.map(async (repo) => {
+  reposGit = allRepos;
+  allRepos = [];
+
+  reposExcel.forEach(repoExcel => {
+    const matchingRepo = reposGit.find(repoGit => repoGit.name === repoExcel.name);
+    if (matchingRepo && !repoExcel.is_archived) {
+      const repoGitUpdatedAtDate = new Date(matchingRepo.updated_at.split('T')[0]);
+      console.log(repoExcel.last_event + ' ' + repoExcel.name);
+      const repoExcelLastEventDate = new Date(repoExcel.last_event.split(' ')[0]);
+      if (repoGitUpdatedAtDate > repoExcelLastEventDate) {
+        repoExcel.is_updated = false;
+      }
+      allRepos.push(repoExcel);
+      reposGit = reposGit.filter(repoGit => repoGit.name !== matchingRepo.name);
+    }
+  });
+
+  // reposGit = await Promise.all(
+  //   reposGit.map(async (repo) => {
   //     return {
   //       name: repo.name,
   //       description: repo.description || 'No hay descripción',
   //       html_url: repo.html_url,
   //       created_at: repo.created_at.split('T')[0],
   //       license: repo.license || 'No se evidencia',
+  //       structure_file: 'Verificar manualmente',
+  //       key_files: 'Verificar manualmente',
   //       readme: await sendPetition(repo.url + '/readme', 'file') ? 'Está presente' : 'No está presente',
   //       contributing: await sendPetition(repo.url + '/contents/CONTRIBUTING.md', 'file') ? 'Está presente' : 'No está presente',
   //       default_branch: repo.default_branch,
   //       branches: await sendPetition(repo.branches_url.split('{')[0], 'branches'),
   //       last_commit: await sendPetition(repo.commits_url.split('{')[0], 'commits'),
   //       releases: await sendPetition(repo.releases_url.split('{')[0], 'releases'),
-  //       access: repo.private ? 'El repositorio es privado.<br>Solo es accesible para colaboradores específicos.' : 'El repositorio es público.<br>Cualquier persona puede verlo.',
+  //       dependencies: 'Verificar manualmente',
+  //       dependencies_problems: 'Verificar manualmente',
+  //       security: 'Verificar manualmente',
+  //       access: repo.private ? 'El repositorio es privado. Solo es accesible para colaboradores específicos.' : 'El repositorio es público. Cualquier persona puede verlo.',
   //       collaborators: await sendPetition(repo.collaborators_url.split('{')[0], 'collaborators'),
+  //       sensitive_files: 'Verificar manualmente',
+  //       issues: 'Verificar manualmente',
   //       pull_requests: repo.open_issues > 0 ? await sendPetition(repo.issues_url.split('{')[0], 'PR') : 'No hay pull requests abiertos',
-  //       last_event: await sendPetition(repo.events_url, 'events') || ` Sin actividad reciente.<br>Última actividad en ${repo.updated_at.split('T')[0]}`,
-  //       forks: repo.forks_count > 0 ? repo.forks_count : 'Ninguno'
+  //       contributing_document: 'Verificar manualmente',
+  //       ci: 'Verificar manualmente',
+  //       qa: 'Verificar manualmente',
+  //       sonar: 'Verificar manualmente',
+  //       cd: 'Verificar manualmente',
+  //       readme2: 'Verificar manualmente',
+  //       wiki: 'Verificar manualmente',
+  //       example: 'Verificar manualmente',
+  //       contributing_guide: 'Verificar manualmente',
+  //       forks: repo.forks_count > 0 ? repo.forks_count : 'Ninguno',
+  //       current_contributing: 'Verificar manualmente',
+  //       last_event: await sendPetition(repo.events_url, 'events') || ` Sin actividad reciente. Última actividad en ${repo.updated_at.split('T')[0]}`,
+  //       update_frequency: 'Verificar manualmente',
+  //       archived_plan: 'Verificar manualmente',
+  //       future_steps: 'Verificar manualmente',
+  //       comments: 'Verificar manualmente',
+  //       is_archived: repo.archived,
+  //       updated_at: repo.updated_at.split('T')[0],
   //     };
   //   })
   // );
-  // console.log(allRepos.length);
-  return allRepos;
+  reposGit.forEach(repo => { console.log(repo.name); });
+  //return allRepos;
 }
 
 async function sendPetition(url, type) {
@@ -120,7 +158,7 @@ async function sendPetition(url, type) {
         return response.data;
       case 'branches':
         response = await api.get(url);
-        return response.data.map(branch => branch.name).join('<br>');
+        return response.data.map(branch => branch.name);
       case 'commits':
         response = await api.get(url);
         response = response.data.map(res => ({ author: res.commit.author.name, date: res.commit.author.date.split('T')[0], message: res.commit.message }))[0];
@@ -158,4 +196,4 @@ async function sendPetition(url, type) {
 
 module.exports = { fetchAllRepos };
 
-//fetchAllRepos(); // Habilitar si se quiere probar la función en consola
+fetchAllRepos(); // Habilitar si se quiere probar la función en consola
