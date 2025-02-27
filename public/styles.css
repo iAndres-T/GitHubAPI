@@ -18,6 +18,20 @@
   height: 10px;
 }
 
+#spinner-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .repo-archived{
   background-color: #faae20;
+}
+
+.repo-updated{
+  background-color: #ffff99;
+}
+
+.repo-deleted{
+  background-color: #ff9999;
 }
