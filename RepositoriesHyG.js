@@ -88,63 +88,71 @@ async function fetchAllRepos() {
     const matchingRepo = reposGit.find(repoGit => repoGit.name === repoExcel.name);
     if (matchingRepo && !repoExcel.is_archived) {
       const repoGitUpdatedAtDate = new Date(matchingRepo.updated_at.split('T')[0]);
-      console.log(repoExcel.last_event + ' ' + repoExcel.name);
-      const repoExcelLastEventDate = new Date(repoExcel.last_event.split(' ')[0]);
+      const repoExcelLastEventDate = new Date(repoExcel.last_event.split('\n')[0].split('/').reverse());
       if (repoGitUpdatedAtDate > repoExcelLastEventDate) {
         repoExcel.is_updated = false;
       }
       allRepos.push(repoExcel);
       reposGit = reposGit.filter(repoGit => repoGit.name !== matchingRepo.name);
     }
+    else if(repoExcel.is_archived) {
+      allRepos.push(repoExcel);
+      reposGit = reposGit.filter(repoGit => repoGit.name !== repoExcel.name);
+    }
+    else {
+      repoExcel.deleted = true;
+      allRepos.push(repoExcel);
+    }
   });
 
-  // reposGit = await Promise.all(
-  //   reposGit.map(async (repo) => {
-  //     return {
-  //       name: repo.name,
-  //       description: repo.description || 'No hay descripción',
-  //       html_url: repo.html_url,
-  //       created_at: repo.created_at.split('T')[0],
-  //       license: repo.license || 'No se evidencia',
-  //       structure_file: 'Verificar manualmente',
-  //       key_files: 'Verificar manualmente',
-  //       readme: await sendPetition(repo.url + '/readme', 'file') ? 'Está presente' : 'No está presente',
-  //       contributing: await sendPetition(repo.url + '/contents/CONTRIBUTING.md', 'file') ? 'Está presente' : 'No está presente',
-  //       default_branch: repo.default_branch,
-  //       branches: await sendPetition(repo.branches_url.split('{')[0], 'branches'),
-  //       last_commit: await sendPetition(repo.commits_url.split('{')[0], 'commits'),
-  //       releases: await sendPetition(repo.releases_url.split('{')[0], 'releases'),
-  //       dependencies: 'Verificar manualmente',
-  //       dependencies_problems: 'Verificar manualmente',
-  //       security: 'Verificar manualmente',
-  //       access: repo.private ? 'El repositorio es privado. Solo es accesible para colaboradores específicos.' : 'El repositorio es público. Cualquier persona puede verlo.',
-  //       collaborators: await sendPetition(repo.collaborators_url.split('{')[0], 'collaborators'),
-  //       sensitive_files: 'Verificar manualmente',
-  //       issues: 'Verificar manualmente',
-  //       pull_requests: repo.open_issues > 0 ? await sendPetition(repo.issues_url.split('{')[0], 'PR') : 'No hay pull requests abiertos',
-  //       contributing_document: 'Verificar manualmente',
-  //       ci: 'Verificar manualmente',
-  //       qa: 'Verificar manualmente',
-  //       sonar: 'Verificar manualmente',
-  //       cd: 'Verificar manualmente',
-  //       readme2: 'Verificar manualmente',
-  //       wiki: 'Verificar manualmente',
-  //       example: 'Verificar manualmente',
-  //       contributing_guide: 'Verificar manualmente',
-  //       forks: repo.forks_count > 0 ? repo.forks_count : 'Ninguno',
-  //       current_contributing: 'Verificar manualmente',
-  //       last_event: await sendPetition(repo.events_url, 'events') || ` Sin actividad reciente. Última actividad en ${repo.updated_at.split('T')[0]}`,
-  //       update_frequency: 'Verificar manualmente',
-  //       archived_plan: 'Verificar manualmente',
-  //       future_steps: 'Verificar manualmente',
-  //       comments: 'Verificar manualmente',
-  //       is_archived: repo.archived,
-  //       updated_at: repo.updated_at.split('T')[0],
-  //     };
-  //   })
-  // );
-  reposGit.forEach(repo => { console.log(repo.name); });
-  //return allRepos;
+  reposGit = await Promise.all(
+    reposGit.map(async (repo) => {
+      return {
+        name: repo.name,
+        description: repo.description || 'No hay descripción',
+        html_url: repo.html_url,
+        created_at: repo.created_at.split('T')[0],
+        license: repo.license || 'No se evidencia',
+        structure_file: 'Verificar manualmente',
+        key_files: 'Verificar manualmente',
+        readme: await sendPetition(repo.url + '/readme', 'file') ? 'Está presente' : 'No está presente',
+        contributing: await sendPetition(repo.url + '/contents/CONTRIBUTING.md', 'file') ? 'Está presente' : 'No está presente',
+        default_branch: repo.default_branch,
+        branches: await sendPetition(repo.branches_url.split('{')[0], 'branches'),
+        last_commit: await sendPetition(repo.commits_url.split('{')[0], 'commits'),
+        releases: await sendPetition(repo.releases_url.split('{')[0], 'releases'),
+        dependencies: 'Verificar manualmente',
+        dependencies_problems: 'Verificar manualmente',
+        security: 'Verificar manualmente',
+        access: repo.private ? 'El repositorio es privado. Solo es accesible para colaboradores específicos.' : 'El repositorio es público. Cualquier persona puede verlo.',
+        collaborators: await sendPetition(repo.collaborators_url.split('{')[0], 'collaborators'),
+        sensitive_files: 'Verificar manualmente',
+        issues: 'Verificar manualmente',
+        pull_requests: repo.open_issues > 0 ? await sendPetition(repo.issues_url.split('{')[0], 'PR') : 'No hay pull requests abiertos',
+        contributing_document: 'Verificar manualmente',
+        ci: 'Verificar manualmente',
+        qa: 'Verificar manualmente',
+        sonar: 'Verificar manualmente',
+        cd: 'Verificar manualmente',
+        readme2: 'Verificar manualmente',
+        wiki: 'Verificar manualmente',
+        example: 'Verificar manualmente',
+        contributing_guide: 'Verificar manualmente',
+        forks: repo.forks_count > 0 ? repo.forks_count : 'Ninguno',
+        current_contributing: 'Verificar manualmente',
+        last_event: await sendPetition(repo.events_url, 'events') || ` Sin actividad reciente. Última actividad en ${repo.updated_at.split('T')[0]}`,
+        update_frequency: 'Verificar manualmente',
+        archived_plan: 'Verificar manualmente',
+        future_steps: 'Verificar manualmente',
+        comments: 'Verificar manualmente',
+        is_archived: repo.archived,
+        is_updated: true,
+        deleted: false
+      };
+    })
+  );
+  allRepos = allRepos.concat(reposGit);
+  return allRepos;
 }
 
 async function sendPetition(url, type) {
@@ -158,31 +166,31 @@ async function sendPetition(url, type) {
         return response.data;
       case 'branches':
         response = await api.get(url);
-        return response.data.map(branch => branch.name);
+        return response.data.map(branch => branch.name).join('\n');
       case 'commits':
         response = await api.get(url);
         response = response.data.map(res => ({ author: res.commit.author.name, date: res.commit.author.date.split('T')[0], message: res.commit.message }))[0];
-        return `${response.date}<br>${response.message}<br>${response.author}`;
+        return `${response.date}\n${response.message}\n${response.author}`;
       case 'releases':
         response = await api.get(url);
         if (response.data.length == 0)
           return 'No se ha hecho ningun release';
         response = response.data.map(release => ({ tag: release.tag_name, date: release.published_at.split('T')[0] }))[0];
-        return `${response.tag}<br>${response.date}`;
+        return `${response.tag}\n${response.date}`;
       case 'collaborators':
         response = await api.get(url);
-        return response.data.map(collab => collab.login).join('<br>');
+        return response.data.map(collab => collab.login).join('\n');
       case 'PR': //Pull Requests
         response = await api.get(url);
         response = response.data.map(pr => ({ title: pr.title, body: pr.body }));
-        return response.map(pr => `${pr.title}: ${pr.body}`).join('<br>');
+        return response.map(pr => `${pr.title}: ${pr.body}`).join('\n');
       case 'events':
         response = await api.get(url);
         response = response.data.filter(event => event.type == 'PushEvent');
         if (response.length == 0)
           return null;
         response = response.map(event => ({ branch: event.payload.ref.split('/')[2], date: event.created_at.split('T')[0], author: event.actor.login }))[0];
-        return `Rama: ${response.branch}<br>${response.date}<br>${response.author}`;
+        return `Rama: ${response.branch}\n${response.date}\n${response.author}`;
     }
 
   }
