@@ -53,7 +53,8 @@ function readExcel() {
       future_steps: fila['PRÓXIMOS PASOS O FEATURE'],
       comments: fila['COMENTARIOS GENERALES'],
       is_archived: fila['NOMBRE DEL REPOSITORIO'].includes('legacy_') ? true : false,
-      is_updated: true
+      is_updated: true,
+      deleted: false
     }
   });
   return json;
