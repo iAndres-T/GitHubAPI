@@ -1,6 +1,6 @@
 import { CustomToolTip } from './components/CustomToolTip.js';
 
-let tableData;
+let gridApi;
 
 $(document).ready(function () {
   $('#spinner').show();
@@ -34,6 +34,9 @@ async function getAdGrid() {
       cellStyle: { 'line-height': '1.5' },
       tooltipComponent: CustomToolTip
     },
+    getRowId: (params) => {
+      return params.data.name;
+    },
     enableBrowserTooltips: true,
     rowHeight: 100,
     rowData: repos,
@@ -44,7 +47,7 @@ async function getAdGrid() {
         pinned: 'left',
         cellStyle: { 'text-align': 'center' },
         cellRenderer: params => {
-          return `<button type="button" class="btn btn-outline-info" ${params.data.is_archived || params.data.deleted ? 'disabled' : ''}><i class="fa fa-refresh"></i></button>`;
+          return `<button type="button" class="btn btn-outline-info update-repo" ${params.data.is_archived || params.data.deleted || params.data.is_updated ? 'disabled' : ''}><i class="fa fa-refresh"></i></button>`;
         }
       },
       {
@@ -174,8 +177,34 @@ async function getAdGrid() {
   };
 
   const myGrid = document.getElementById('myGrid');
-  const gridApi = agGrid.createGrid(myGrid, gridOptions);
+  gridApi = agGrid.createGrid(myGrid, gridOptions);
 }
+
+$('#myGrid').on('click', '.update-repo', async function () {
+  const rowNode = gridApi.getRowNode($(this).closest('div.ag-row').attr('row-id'));
+  fetch('/update', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(rowNode.data)
+  })
+  .then(response => {
+    if (response.ok) {
+      return response.json();
+    } else {
+      throw new Error('Error updating repository: ' + response.statusText);
+    }
+  })
+  .then(updatedRepo => {
+    console.log('Repository send to update:', rowNode.data);
+    console.log('Repository updated:', updatedRepo);
+    //rowNode.updateData(updatedRepo);
+  })
+  .catch(error => {
+    console.error('Error updating repository:', error);
+  });
+});
 
 function formatText(params) {
   try {
