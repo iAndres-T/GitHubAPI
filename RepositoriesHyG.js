@@ -4,6 +4,7 @@ const { readExcel } = require('./readExcel');
 
 const GITHUB_API_URL = 'https://api.github.com';
 const GITHUB_TOKEN = process.env.GITHUB_TOKENHYG;
+let allReposFromGit = [];
 
 if (!GITHUB_TOKEN) {
   console.error('GITHUB_TOKEN is required');
@@ -26,14 +27,23 @@ const apiFile = axios.create({
   }
 });
 
-async function getReposGit(page) {
+async function getReposGit() {
+  let page = 1;
+  let repos = [];
   try {
-    const response = await api.get(`user/repos?type=member&per_page=100&page=${page}`);
-    console.log('Rate Limit:', response.headers['x-ratelimit-limit']);
-    console.log('Rate Limit Remaining:', response.headers['x-ratelimit-remaining']);
-    console.log('Rate Limit Reset:', new Date(response.headers['x-ratelimit-reset'] * 1000).toLocaleString());
+    while (true) {
+      const response = await api.get(`user/repos?type=member&per_page=100&page=${page}`);
+      console.log('Rate Limit:', response.headers['x-ratelimit-limit']);
+      console.log('Rate Limit Remaining:', response.headers['x-ratelimit-remaining']);
+      console.log('Rate Limit Reset:', new Date(response.headers['x-ratelimit-reset'] * 1000).toLocaleString());
+  
+      if (!response.data || response.data.length === 0) break;
 
-    return response.data;
+      repos = repos.concat(response.data);
+      page++;
+      
+    }
+    return repos;
 
     /*Propiedades de la respuesta
       name: string,
@@ -68,21 +78,10 @@ async function getReposGit(page) {
 }
 
 async function fetchAllRepos() {
-  let page = 1;
   let allRepos = [];
-  let reposGit = [];
   let reposExcel = readExcel();
-  //return reposExcel;
-  while (true) {
-    reposGit = await getReposGit(page);
-    if (!reposGit || reposGit.length === 0)
-      break;
-
-    allRepos = allRepos.concat(reposGit);
-    page++;
-  }
-  reposGit = allRepos;
-  allRepos = [];
+  allReposFromGit = await getReposGit();
+  let reposGit = allReposFromGit;
 
   reposExcel.forEach(repoExcel => {
     const matchingRepo = reposGit.find(repoGit => repoGit.name === repoExcel.name);
@@ -190,7 +189,7 @@ async function sendPetition(url, type) {
         if (response.length == 0)
           return null;
         response = response.map(event => ({ branch: event.payload.ref.split('/')[2], date: event.created_at.split('T')[0], author: event.actor.login }))[0];
-        return `Rama: ${response.branch}\n${response.date}\n${response.author}`;
+        return `${response.date}\nCommit por ${response.author}\n${response.branch}`;
     }
 
   }
@@ -202,6 +201,39 @@ async function sendPetition(url, type) {
   }
 }
 
-module.exports = { fetchAllRepos };
+async function updateRepository(repo) {
+  const matchingRepo = allReposFromGit.find(repoGit => repoGit.name === repo.name);
+  if (matchingRepo) {
+    const results = await Promise.all([
+      sendPetition(matchingRepo.url + '/readme', 'file'),
+      sendPetition(matchingRepo.url + '/contents/CONTRIBUTING.md', 'file'),
+      sendPetition(matchingRepo.branches_url.split('{')[0], 'branches'),
+      sendPetition(matchingRepo.commits_url.split('{')[0], 'commits'),
+      sendPetition(matchingRepo.releases_url.split('{')[0], 'releases'),
+      sendPetition(matchingRepo.collaborators_url.split('{')[0], 'collaborators'),
+      matchingRepo.open_issues > 0 ? sendPetition(matchingRepo.issues_url.split('{')[0], 'PR') : Promise.resolve('No hay pull requests abiertos'),
+      sendPetition(matchingRepo.events_url, 'events')
+    ]);
+
+    repo.description = matchingRepo.description || 'No hay descripción';
+    repo.license = matchingRepo.license || 'No se evidencia';
+    repo.readme = results[0] ? 'Está presente' : 'No está presente';
+    repo.contributing = results[1] ? 'Está presente' : 'No está presente';
+    repo.default_branch = matchingRepo.default_branch != repo.default_branch ? matchingRepo.default_branch : repo.default_branch;
+    repo.branches = results[2];
+    repo.last_commit = results[3];
+    repo.releases = results[4];
+    repo.collaborators = results[5];
+    repo.pull_requests = results[6];
+    repo.readme2 = repo.readme;
+    repo.forks = matchingRepo.forks_count > 0 ? matchingRepo.forks_count : 'Ninguno';
+    repo.last_event = results[7] || `Sin actividad reciente. Última actividad en ${matchingRepo.updated_at.split('T')[0]}`;
+    repo.is_updated = true;
+  }
+  return repo;
+}
+
+module.exports = { fetchAllRepos, updateRepository };
+
 
 fetchAllRepos(); // Habilitar si se quiere probar la función en consola
