@@ -1,6 +1,6 @@
 require('dotenv').config();
 const axios = require('axios');
-const { readExcel } = require('./readExcel');
+const { readExcel } = require('./utils/readExcel');
 
 const GITHUB_API_URL = 'https://api.github.com';
 const GITHUB_TOKEN = process.env.GITHUB_TOKENHYG;
@@ -36,12 +36,12 @@ async function getReposGit() {
       console.log('Rate Limit:', response.headers['x-ratelimit-limit']);
       console.log('Rate Limit Remaining:', response.headers['x-ratelimit-remaining']);
       console.log('Rate Limit Reset:', new Date(response.headers['x-ratelimit-reset'] * 1000).toLocaleString());
-  
+
       if (!response.data || response.data.length === 0) break;
 
       repos = repos.concat(response.data);
       page++;
-      
+
     }
     return repos;
 
@@ -94,7 +94,7 @@ async function fetchAllRepos() {
       allRepos.push(repoExcel);
       reposGit = reposGit.filter(repoGit => repoGit.name !== matchingRepo.name);
     }
-    else if(repoExcel.is_archived) {
+    else if (repoExcel.is_archived) {
       allRepos.push(repoExcel);
       reposGit = reposGit.filter(repoGit => repoGit.name !== repoExcel.name);
     }
@@ -110,7 +110,7 @@ async function fetchAllRepos() {
         name: repo.name,
         description: repo.description || 'No hay descripción',
         html_url: repo.html_url,
-        created_at: repo.created_at.split('T')[0],
+        created_at: formatDateToDDMMYY(repo.created_at.split('T')[0]),
         license: repo.license || 'No se evidencia',
         structure_file: 'Verificar manualmente',
         key_files: 'Verificar manualmente',
@@ -127,7 +127,7 @@ async function fetchAllRepos() {
         collaborators: await sendPetition(repo.collaborators_url.split('{')[0], 'collaborators'),
         sensitive_files: 'Verificar manualmente',
         issues: 'Verificar manualmente',
-        pull_requests: repo.open_issues > 0 ? await sendPetition(repo.issues_url.split('{')[0], 'PR') : 'No hay pull requests abiertos',
+        pull_requests: repo.open_issues > 0 ? await sendPetition(repo.issues_url.split('{')[0], 'PR') : 'No hay pull request abiertos',
         contributing_document: 'Verificar manualmente',
         ci: 'Verificar manualmente',
         qa: 'Verificar manualmente',
@@ -139,14 +139,15 @@ async function fetchAllRepos() {
         contributing_guide: 'Verificar manualmente',
         forks: repo.forks_count > 0 ? repo.forks_count : 'Ninguno',
         current_contributing: 'Verificar manualmente',
-        last_event: await sendPetition(repo.events_url, 'events') || ` Sin actividad reciente. Última actividad en ${repo.updated_at.split('T')[0]}`,
+        last_event: await sendPetition(repo.events_url, 'events') || ` Sin actividad reciente. Última actividad en ${formatDateToDDMMYY(repo.updated_at.split('T')[0])}`,
         update_frequency: 'Verificar manualmente',
         archived_plan: 'Verificar manualmente',
         future_steps: 'Verificar manualmente',
         comments: 'Verificar manualmente',
         is_archived: repo.archived,
         is_updated: true,
-        deleted: false
+        deleted: false,
+        in_excel: false
       };
     })
   );
@@ -168,13 +169,18 @@ async function sendPetition(url, type) {
         return response.data.map(branch => branch.name).join('\n');
       case 'commits':
         response = await api.get(url);
-        response = response.data.map(res => ({ author: res.commit.author.name, date: res.commit.author.date.split('T')[0], message: res.commit.message }))[0];
+        response = response.data.map(res => ({
+          author: res.commit.author.name,
+          date: formatDateToDDMMYY(res.commit.author.date.split('T')[0]),
+          message: res.commit.message.includes('\n\n') ? res.commit.message.replace(/\n\n/g, '\n') : res.commit.message
+        }))[0];
+
         return `${response.date}\n${response.message}\n${response.author}`;
       case 'releases':
         response = await api.get(url);
         if (response.data.length == 0)
           return 'No se ha hecho ningun release';
-        response = response.data.map(release => ({ tag: release.tag_name, date: release.published_at.split('T')[0] }))[0];
+        response = response.data.map(release => ({ tag: release.tag_name, date: formatDateToDDMMYY(release.published_at.split('T')[0]) }))[0];
         return `${response.tag}\n${response.date}`;
       case 'collaborators':
         response = await api.get(url);
@@ -188,7 +194,11 @@ async function sendPetition(url, type) {
         response = response.data.filter(event => event.type == 'PushEvent');
         if (response.length == 0)
           return null;
-        response = response.map(event => ({ branch: event.payload.ref.split('/')[2], date: event.created_at.split('T')[0], author: event.actor.login }))[0];
+        response = response.map(event => ({
+          branch: event.payload.ref.split('/')[2],
+          date: formatDateToDDMMYY(event.created_at.split('T')[0]),
+          author: event.actor.login
+        }))[0];
         return `${response.date}\nCommit por ${response.author}\n${response.branch}`;
     }
 
@@ -211,14 +221,14 @@ async function updateRepository(repo) {
       sendPetition(matchingRepo.commits_url.split('{')[0], 'commits'),
       sendPetition(matchingRepo.releases_url.split('{')[0], 'releases'),
       sendPetition(matchingRepo.collaborators_url.split('{')[0], 'collaborators'),
-      matchingRepo.open_issues > 0 ? sendPetition(matchingRepo.issues_url.split('{')[0], 'PR') : Promise.resolve('No hay pull requests abiertos'),
+      matchingRepo.open_issues > 0 ? sendPetition(matchingRepo.issues_url.split('{')[0], 'PR') : Promise.resolve('No hay pull request abiertos'),
       sendPetition(matchingRepo.events_url, 'events')
     ]);
 
     repo.description = matchingRepo.description || 'No hay descripción';
     repo.license = matchingRepo.license || 'No se evidencia';
-    repo.readme = results[0] ? 'Está presente' : 'No está presente';
-    repo.contributing = results[1] ? 'Está presente' : 'No está presente';
+    repo.readme = results[0] ? repo.readme : 'No está presente';
+    repo.contributing = results[1] ? repo.contributing : 'No está presente';
     repo.default_branch = matchingRepo.default_branch != repo.default_branch ? matchingRepo.default_branch : repo.default_branch;
     repo.branches = results[2];
     repo.last_commit = results[3];
@@ -227,10 +237,14 @@ async function updateRepository(repo) {
     repo.pull_requests = results[6];
     repo.readme2 = repo.readme;
     repo.forks = matchingRepo.forks_count > 0 ? matchingRepo.forks_count : 'Ninguno';
-    repo.last_event = results[7] || `Sin actividad reciente. Última actividad en ${matchingRepo.updated_at.split('T')[0]}`;
+    repo.last_event = results[7] || `Sin actividad reciente. Última actividad en ${formatDateToDDMMYY(matchingRepo.updated_at.split('T')[0])}`;
     repo.is_updated = true;
   }
   return repo;
+}
+
+function formatDateToDDMMYY(dateString) {
+  return new Date(dateString).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 module.exports = { fetchAllRepos, updateRepository };
