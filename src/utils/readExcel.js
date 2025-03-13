@@ -1,7 +1,7 @@
 const xlsx = require('xlsx');
 const fs = require('fs');
 const path = require('path');
-const filePath = path.join(__dirname, 'public', 'resources', 'Inventario del GitHub.xlsx');
+const filePath = path.resolve(__dirname, '..', '..', 'public', 'resources', 'Inventario del GitHub.xlsx');
 
 function readExcel() {
   if (!fs.existsSync(filePath)) {
@@ -54,7 +54,8 @@ function readExcel() {
       comments: fila['COMENTARIOS GENERALES'],
       is_archived: fila['NOMBRE DEL REPOSITORIO'].includes('legacy_') ? true : false,
       is_updated: true,
-      deleted: false
+      deleted: false,
+      in_excel: true
     }
   });
   return json;
@@ -71,7 +72,7 @@ function formatDate(date, description) {
     if (description === 'Repositorio vacío') {
       return description;
     }
-    return excelDateToJSDate(date).toISOString().split('T')[0];
+    return excelDateToJSDate(date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }).split('T')[0];
   } catch (error) {
     console.error(`Error en la fecha de creación ${date}`);
     return 'No se pudo formatear la fecha, revisar el formato en la celda de Excel.';
