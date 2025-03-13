@@ -1,13 +1,14 @@
 const express = require('express');
+const path = require('path');
 const { fetchAllRepos, updateRepository } = require('./RepositoriesHyG');
 
 const app = express();
 const PORT = 3000;
 
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, '..', 'public')));
 app.use(express.json());
 
-app.get('/repos', async (req, res) => { 
+app.get('/repos', async (req, res) => {
 
   try {
     const repos = await fetchAllRepos();
@@ -27,7 +28,7 @@ app.post('/update', async (req, res) => {
     res.status(500).json({ error: 'Error fetching repos' });
   }
 });
-  
+
 
 app.listen(PORT, async () => {
   console.log(`Server running on http://localhost:${PORT}`);
