@@ -47,7 +47,7 @@ async function getAdGrid() {
         pinned: 'left',
         cellStyle: { 'text-align': 'center' },
         cellRenderer: params => {
-          return `<button type="button" class="btn btn-outline-info update-repo" ${params.data.is_archived || params.data.deleted || params.data.is_updated ? 'disabled' : ''}><i class="fa fa-refresh"></i></button>`;
+          return `<button type="button" class="btn btn-outline-info update-repo" ${params.data.is_archived || params.data.deleted || (params.data.is_updated && params.data.in_excel) ? 'disabled' : ''}><i class="fa fa-refresh"></i></button>`;
         }
       },
       {
@@ -199,7 +199,7 @@ $('#myGrid').on('click', '.update-repo', async function () {
   .then(updatedRepo => {
     console.log('Repository send to update:', rowNode.data);
     console.log('Repository updated:', updatedRepo);
-    //rowNode.updateData(updatedRepo);
+    rowNode.updateData(updatedRepo);
   })
   .catch(error => {
     console.error('Error updating repository:', error);
@@ -211,6 +211,6 @@ function formatText(params) {
     return params.value.replace(/\n/g, '<br>');
   } catch (error) {
     console.error(`Error en el formato de texto de ${params.value}`);
-    return 'El contenido de la celda no se pudó formatear, puede que la celda está vacía en el archivo de Excel.';
+    return 'El contenido de la celda no se pudó formatear, puede que la celda está vacía en el archivo Excel.';
   }
 }
