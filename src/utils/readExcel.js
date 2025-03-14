@@ -64,7 +64,9 @@ function readExcel() {
 function excelDateToJSDate(serial) {
   // Fecha base de Excel (1900)
   const excelEpoch = new Date(1899, 11, 30);
-  return new Date(excelEpoch.getTime() + serial * 86400000); // 86400000 ms en un día
+  const date = new Date(excelEpoch.getTime() + serial * 86400000); // 86400000 ms en un día
+  console.log(date);
+  return date;
 }
 
 function formatDate(date, description) {
@@ -72,7 +74,7 @@ function formatDate(date, description) {
     if (description === 'Repositorio vacío') {
       return description;
     }
-    return excelDateToJSDate(date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }).split('T')[0];
+    return new excelDateToJSDate(date).toISOString().split('T')[0].split('-').reverse().join('/');
   } catch (error) {
     console.error(`Error en la fecha de creación ${date}`);
     return 'No se pudo formatear la fecha, revisar el formato en la celda de Excel.';
