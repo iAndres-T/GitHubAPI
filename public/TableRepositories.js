@@ -47,7 +47,10 @@ async function getAdGrid() {
         pinned: 'left',
         cellStyle: { 'text-align': 'center' },
         cellRenderer: params => {
-          return `<button type="button" class="btn btn-outline-info update-repo" ${params.data.is_archived || params.data.deleted || (params.data.is_updated && params.data.in_excel) ? 'disabled' : ''}><i class="fa fa-refresh"></i></button>`;
+          if(params.data.in_excel)
+            return `<button type="button" class="btn btn-outline-info update-repo" ${params.data.is_archived || params.data.deleted || params.data.is_updated ? 'disabled' : ''}><i class="fa fa-refresh"></i></button>`;
+          else
+            return `<button type="button" class="btn btn-outline-success upload-repo"><i class="fa fa-upload"></i></button>`;
         }
       },
       {
@@ -59,7 +62,8 @@ async function getAdGrid() {
         cellClassRules: {
           "repo-archived": params => params.data.is_archived,
           "repo-updated": params => !params.data.is_updated,
-          "repo-deleted": params => params.data.deleted
+          "repo-deleted": params => params.data.deleted,
+          "repo-no-excel": params => !params.data.in_excel
         }
       },
       {
