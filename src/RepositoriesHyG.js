@@ -86,8 +86,8 @@ async function fetchAllRepos() {
   reposExcel.forEach(repoExcel => {
     const matchingRepo = reposGit.find(repoGit => repoGit.name === repoExcel.name);
     if (matchingRepo && !repoExcel.is_archived) {
-      const repoGitUpdatedAtDate = new Date(matchingRepo.updated_at.split('T')[0]);
-      const repoExcelLastEventDate = new Date(repoExcel.last_event.split('\n')[0].split('/').reverse());
+      const repoGitUpdatedAtDate = formatDateToDDMMYY(matchingRepo.updated_at);
+      const repoExcelLastEventDate = formatDateToDDMMYY(repoExcel.last_event.split('\n')[0].split('/').reverse());
       if (repoGitUpdatedAtDate > repoExcelLastEventDate) {
         repoExcel.is_updated = false;
       }
@@ -110,7 +110,7 @@ async function fetchAllRepos() {
         name: repo.name,
         description: repo.description || 'No hay descripción',
         html_url: repo.html_url,
-        created_at: formatDateToDDMMYY(repo.created_at.split('T')[0]),
+        created_at: formatDateToDDMMYY(repo.created_at),
         license: repo.license || 'No se evidencia',
         structure_file: 'Verificar manualmente',
         key_files: 'Verificar manualmente',
@@ -139,7 +139,7 @@ async function fetchAllRepos() {
         contributing_guide: 'Verificar manualmente',
         forks: repo.forks_count > 0 ? repo.forks_count : 'Ninguno',
         current_contributing: 'Verificar manualmente',
-        last_event: await sendPetition(repo.events_url, 'events') || ` Sin actividad reciente. Última actividad en ${formatDateToDDMMYY(repo.updated_at.split('T')[0])}`,
+        last_event: await sendPetition(repo.events_url, 'events') || ` Sin actividad reciente. Última actividad en ${formatDateToDDMMYY(repo.updated_at)}`,
         update_frequency: 'Verificar manualmente',
         archived_plan: 'Verificar manualmente',
         future_steps: 'Verificar manualmente',
@@ -171,16 +171,16 @@ async function sendPetition(url, type) {
         response = await api.get(url);
         response = response.data.map(res => ({
           author: res.commit.author.name,
-          date: formatDateToDDMMYY(res.commit.author.date.split('T')[0]),
-          message: res.commit.message.includes('\n\n') ? res.commit.message.replace(/\n\n/g, '\n') : res.commit.message
+          date: res.commit.author.date,
+          message: res.commit.message
         }))[0];
 
-        return `${response.date}\n${response.message}\n${response.author}`;
+        return `${formatDateToDDMMYY(response.date)}\n${response.message.includes('\n\n') ? response.message.replace(/\n\n/g, '\n') : response.message}\n${response.author}`;
       case 'releases':
         response = await api.get(url);
         if (response.data.length == 0)
           return 'No se ha hecho ningun release';
-        response = response.data.map(release => ({ tag: release.tag_name, date: formatDateToDDMMYY(release.published_at.split('T')[0]) }))[0];
+        response = response.data.map(release => ({ tag: release.tag_name, date: formatDateToDDMMYY(release.published_at) }))[0];
         return `${response.tag}\n${response.date}`;
       case 'collaborators':
         response = await api.get(url);
@@ -196,7 +196,7 @@ async function sendPetition(url, type) {
           return null;
         response = response.map(event => ({
           branch: event.payload.ref.split('/')[2],
-          date: formatDateToDDMMYY(event.created_at.split('T')[0]),
+          date: formatDateToDDMMYY(event.created_at),
           author: event.actor.login
         }))[0];
         return `${response.date}\nCommit por ${response.author}\n${response.branch}`;
@@ -212,6 +212,7 @@ async function sendPetition(url, type) {
 }
 
 async function updateRepository(repo) {
+  edit = 1;
   const matchingRepo = allReposFromGit.find(repoGit => repoGit.name === repo.name);
   if (matchingRepo) {
     const results = await Promise.all([
@@ -237,16 +238,18 @@ async function updateRepository(repo) {
     repo.pull_requests = results[6];
     repo.readme2 = repo.readme;
     repo.forks = matchingRepo.forks_count > 0 ? matchingRepo.forks_count : 'Ninguno';
-    repo.last_event = results[7] || `Sin actividad reciente. Última actividad en ${formatDateToDDMMYY(matchingRepo.updated_at.split('T')[0])}`;
+    repo.last_event = results[7] || `Sin actividad reciente. Última actividad en ${formatDateToDDMMYY(matchingRepo.updated_at)}`;
     repo.is_updated = true;
   }
+  console.log("Devuelve: ",repo.last_commit);
   return repo;
 }
 
 function formatDateToDDMMYY(dateString) {
+  if (edit == 1) console.log("Llega: ",dateString);
   return new Date(dateString).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
-
+let edit = 0;
 module.exports = { fetchAllRepos, updateRepository };
 
 
