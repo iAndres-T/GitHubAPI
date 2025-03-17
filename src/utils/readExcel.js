@@ -65,7 +65,6 @@ function excelDateToJSDate(serial) {
   // Fecha base de Excel (1900)
   const excelEpoch = new Date(1899, 11, 30);
   const date = new Date(excelEpoch.getTime() + serial * 86400000); // 86400000 ms en un día
-  console.log(date);
   return date;
 }
 
