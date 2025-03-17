@@ -86,8 +86,8 @@ async function fetchAllRepos() {
   reposExcel.forEach(repoExcel => {
     const matchingRepo = reposGit.find(repoGit => repoGit.name === repoExcel.name);
     if (matchingRepo && !repoExcel.is_archived) {
-      const repoGitUpdatedAtDate = formatDateToDDMMYY(matchingRepo.updated_at);
-      const repoExcelLastEventDate = formatDateToDDMMYY(repoExcel.last_event.split('\n')[0].split('/').reverse());
+      const repoGitUpdatedAtDate = new Date(matchingRepo.updated_at.split('T')[0]);
+      const repoExcelLastEventDate = new Date(repoExcel.last_event.split('\n')[0].split('/').reverse());
       if (repoGitUpdatedAtDate > repoExcelLastEventDate) {
         repoExcel.is_updated = false;
       }
@@ -241,15 +241,14 @@ async function updateRepository(repo) {
     repo.last_event = results[7] || `Sin actividad reciente. Última actividad en ${formatDateToDDMMYY(matchingRepo.updated_at)}`;
     repo.is_updated = true;
   }
-  console.log("Devuelve: ",repo.last_commit);
+
   return repo;
 }
 
 function formatDateToDDMMYY(dateString) {
-  if (edit == 1) console.log("Llega: ",dateString);
   return new Date(dateString).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
-let edit = 0;
+
 module.exports = { fetchAllRepos, updateRepository };
 
 
