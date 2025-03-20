@@ -1,6 +1,7 @@
 require('dotenv').config();
 const axios = require('axios');
 const { readExcel } = require('./utils/readExcel');
+const { updateExcel } = require('./utils/EditExcel');
 
 const GITHUB_API_URL = 'https://api.github.com';
 const GITHUB_TOKEN = process.env.GITHUB_TOKENHYG;
@@ -180,8 +181,8 @@ async function sendPetition(url, type) {
         response = await api.get(url);
         if (response.data.length == 0)
           return 'No se ha hecho ningun release';
-        response = response.data.map(release => ({ tag: release.tag_name, date: formatDateToDDMMYY(release.published_at) }))[0];
-        return `${response.tag}\n${response.date}`;
+        response = response.data.map(release => ({ tag: release.tag_name, date: release.published_at }))[0];
+        return `${response.tag}\n${formatDateToDDMMYY(response.date)}`;
       case 'collaborators':
         response = await api.get(url);
         return response.data.map(collab => collab.login).join('\n');
@@ -196,10 +197,10 @@ async function sendPetition(url, type) {
           return null;
         response = response.map(event => ({
           branch: event.payload.ref.split('/')[2],
-          date: formatDateToDDMMYY(event.created_at),
+          date: event.created_at,
           author: event.actor.login
         }))[0];
-        return `${response.date}\nCommit por ${response.author}\n${response.branch}`;
+        return `${formatDateToDDMMYY(response.date)}\nCommit por ${response.author}\n${response.branch}`;
     }
 
   }
@@ -212,7 +213,6 @@ async function sendPetition(url, type) {
 }
 
 async function updateRepository(repo) {
-  edit = 1;
   const matchingRepo = allReposFromGit.find(repoGit => repoGit.name === repo.name);
   if (matchingRepo) {
     const results = await Promise.all([
@@ -239,7 +239,13 @@ async function updateRepository(repo) {
     repo.readme2 = repo.readme;
     repo.forks = matchingRepo.forks_count > 0 ? matchingRepo.forks_count : 'Ninguno';
     repo.last_event = results[7] || `Sin actividad reciente. Última actividad en ${formatDateToDDMMYY(matchingRepo.updated_at)}`;
+  }
+
+  try {
+    await updateExcel(repo);
     repo.is_updated = true;
+  } catch (error) {
+    throw new Error('Error al actualizar el archivo Excel');
   }
 
   return repo;
