@@ -109,7 +109,7 @@ async function fetchAllRepos() {
     reposGit.map(async (repo) => {
       return {
         name: repo.name,
-        description: repo.description || 'No hay descripción',
+        description: repo.description || 'Sin descripción proporcionada',
         html_url: repo.html_url,
         created_at: formatDateToDDMMYY(repo.created_at),
         license: repo.license || 'No se evidencia',
@@ -140,7 +140,7 @@ async function fetchAllRepos() {
         contributing_guide: 'Verificar manualmente',
         forks: repo.forks_count > 0 ? repo.forks_count : 'Ninguno',
         current_contributing: 'Verificar manualmente',
-        last_event: await sendPetition(repo.events_url, 'events') || ` Sin actividad reciente. Última actividad en ${formatDateToDDMMYY(repo.updated_at)}`,
+        last_event: await sendPetition(repo.events_url, 'events') || `Sin actividad reciente. Última actividad en ${formatDateToDDMMYY(repo.updated_at)}`,
         update_frequency: 'Verificar manualmente',
         archived_plan: 'Verificar manualmente',
         future_steps: 'Verificar manualmente',
@@ -226,7 +226,7 @@ async function updateRepository(repo) {
       sendPetition(matchingRepo.events_url, 'events')
     ]);
 
-    repo.description = matchingRepo.description || 'No hay descripción';
+    repo.description = repo.description == 'Sin descripción proporcionada' ? matchingRepo.description : repo.description;
     repo.license = matchingRepo.license || 'No se evidencia';
     repo.readme = results[0] ? repo.readme : 'No está presente';
     repo.contributing = results[1] ? repo.contributing : 'No está presente';
