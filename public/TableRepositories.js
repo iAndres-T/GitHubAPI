@@ -50,7 +50,7 @@ async function getAdGrid() {
           if(params.data.in_excel)
             return `<button type="button" class="btn btn-outline-info update-repo" ${params.data.is_archived || params.data.deleted || params.data.is_updated ? 'disabled' : ''}><i class="fa fa-refresh"></i></button>`;
           else
-            return `<button type="button" class="btn btn-outline-success upload-repo"><i class="fa fa-upload"></i></button>`;
+            return `<button type="button" class="btn btn-outline-success update-repo"><i class="fa fa-upload"></i></button>`;
         }
       },
       {
@@ -197,7 +197,7 @@ $('#myGrid').on('click', '.update-repo', async function () {
     if (response.ok) {
       return response.json();
     } else {
-      throw new Error('Error updating repository: ' + response.statusText);
+      throw new Error(response.statusText);
     }
   })
   .then(updatedRepo => {
@@ -206,7 +206,7 @@ $('#myGrid').on('click', '.update-repo', async function () {
     rowNode.updateData(updatedRepo);
   })
   .catch(error => {
-    console.error('Error updating repository:', error);
+    console.error('Error updating repository:', error.message);
   });
 });
 
