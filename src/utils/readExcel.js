@@ -12,7 +12,7 @@ function readExcel() {
   const sheetName = workbook.SheetNames[0];
   const sheet = workbook.Sheets[sheetName];
   const data = xlsx.utils.sheet_to_json(sheet, { range: 5 });
-  let json = data;//.slice(0, 1);
+  let json = data;
   json = json.map(fila => {
     return {
       name: fila['NOMBRE DEL REPOSITORIO'],
