@@ -1,7 +1,7 @@
 require('dotenv').config();
 const axios = require('axios');
 const { readExcel } = require('./utils/readExcel');
-const { updateExcel } = require('./utils/EditExcel');
+const { updateExcel, uploadExcel } = require('./utils/EditExcel');
 
 const GITHUB_API_URL = 'https://api.github.com';
 const GITHUB_TOKEN = process.env.GITHUB_TOKENHYG;
@@ -175,7 +175,6 @@ async function sendPetition(url, type) {
           date: res.commit.author.date,
           message: res.commit.message
         }))[0];
-
         return `${formatDateToDDMMYY(response.date)}\n${response.message.includes('\n\n') ? response.message.replace(/\n\n/g, '\n') : response.message}\n${response.author}`;
       case 'releases':
         response = await api.get(url);
@@ -251,11 +250,21 @@ async function updateRepository(repo) {
   return repo;
 }
 
+async function uploadRepository(repo) {
+  try {
+    await uploadExcel(repo);
+    repo.in_excel = true;
+  } catch (error) {
+    throw new Error('Error al subir el repositorio en el archivo Excel');
+  }
+  return repo;
+}
+
 function formatDateToDDMMYY(dateString) {
   return new Date(dateString).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-module.exports = { fetchAllRepos, updateRepository };
+module.exports = { fetchAllRepos, updateRepository, uploadRepository };
 
 
-fetchAllRepos(); // Habilitar si se quiere probar la función en consola
+//fetchAllRepos(); // Habilitar si se quiere probar la función en consola
