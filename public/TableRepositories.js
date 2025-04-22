@@ -203,7 +203,7 @@ $('#myGrid').on('click', '.update-repo', async function () {
   .then(updatedRepo => {
     console.log('Repository send to update:', rowNode.data);
     console.log('Repository updated:', updatedRepo);
-    rowNode.updateData(updatedRepo);
+    rowNode.setData(updatedRepo);
   })
   .catch(error => {
     console.error('Error updating repository:', error.message);

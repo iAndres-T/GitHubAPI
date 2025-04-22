@@ -255,7 +255,7 @@ async function uploadRepository(repo) {
     await uploadExcel(repo);
     repo.in_excel = true;
   } catch (error) {
-    throw new Error('Error al subir el repositorio en el archivo Excel');
+    throw new Error(error);
   }
   return repo;
 }
